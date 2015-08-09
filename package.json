@@ -1,0 +1,29 @@
+{
+  "name": "conventional-changelog",
+  "version": "0.0.0",
+  "description": "Generate a changelog or make a new GitHub release from git metadata",
+  "keywords": [
+    "conventional-github-releaser",
+    "github",
+    "gh",
+    "release",
+    "releases",
+    "conventional-changelog",
+    "conventional",
+    "changelog",
+    "log"
+  ],
+  "private": true,
+  "repository": "https://github.com/stevemao/atom-conventional-changelog",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+    "concat-stream": "^1.5.0",
+    "conventional-changelog": "^0.3.0",
+    "conventional-commits-detector": "^0.1.0",
+    "conventional-github-releaser": "^0.3.0",
+    "loophole": "git://github.com/stevemao/loophole.git"
+  }
+}
