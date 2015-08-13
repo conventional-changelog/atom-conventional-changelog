@@ -1,10 +1,12 @@
 'use babel'
+import concatStream from 'concat-stream';
 import conventionalChangelog from 'conventional-changelog';
 import conventionalCommitsDetector from 'conventional-commits-detector';
 import conventionalGithubReleaser from 'conventional-github-releaser';
-import concatStream from 'concat-stream';
+import gitRawCommits from 'git-raw-commits';
 import loophole from 'loophole';
 import path from 'path';
+import through from 'through2';
 
 function chdirToRepo() {
   const editor = atom.workspace.getActiveTextEditor();
@@ -19,12 +21,43 @@ function chdirToRepo() {
   process.chdir(path.dirname(file));
 }
 
-function getConfigs() {
-  return [{
-    preset: atom.config.get('conventional-changelog.preset'),
-    append: atom.config.get('conventional-changelog.append'),
-	  releaseCount: atom.config.get('conventional-changelog.releaseCount')
-  }];
+function getConfigs(done) {
+  let preset = atom.config.get('conventional-changelog.preset');
+  let append = atom.config.get('conventional-changelog.append');
+  let releaseCount = atom.config.get('conventional-changelog.releaseCount');
+
+  if (preset === 'auto') {
+    loophole.allowUnsafeNewFunctionAsync((unsafeDone) => {
+      let commits = [];
+
+      gitRawCommits()
+        .on('error', (err) => {
+          err.message = 'Error in git-raw-commits: ' + err.message;
+          done(err);
+          unsafeDone();
+        })
+        .pipe(through((data, enc, cb) => {
+          commits.push(data.toString());
+          cb();
+        }, () => {
+          preset = conventionalCommitsDetector(commits);
+
+          done(null, [{
+            preset,
+            append,
+            releaseCount
+          }]);
+          unsafeDone();
+        }));
+      })
+    return;
+  }
+
+  done(null, [{
+    preset,
+    append,
+	  releaseCount
+  }]);
 }
 
 function changelog() {
@@ -33,48 +66,66 @@ function changelog() {
   const editor = atom.workspace.getActiveTextEditor();
   let text = editor.getText();
 
-  loophole.allowUnsafeNewFunctionAsync((done) => {
-    let configs = getConfigs();
+  getConfigs((err, data) => {
+    if (err) {
+      console.error(err);
+      atom.beep();
+      return;
+    }
+
+    let configs = data;
     let opts = configs[0];
 
-    return conventionalChangelog(...configs)
-      .on('error', function(err) {
-        err.message = 'Error in conventional-changelog: ' + err.message;
-        console.error(err);
-        atom.beep();
-      })
-      .pipe(concatStream((data) => {
-        data = data.toString();
+    loophole.allowUnsafeNewFunctionAsync((unsafeDone) => {
+      return conventionalChangelog(...configs)
+        .on('error', function(err) {
+          err.message = 'Error in conventional-changelog: ' + err.message;
+          console.error(err);
+          atom.beep();
+          unsafeDone();
+        })
+        .pipe(concatStream((data) => {
+          data = data.toString();
 
-        if (opts.releaseCount === 0) {
-          text = data;
-        } else if (opts.append) {
-          text = text + data;
-        } else if (!opts.append) {
-          text = data + text;
-        }
+          if (opts.releaseCount === 0) {
+            text = data;
+          } else if (opts.append) {
+            text = text + data;
+          } else if (!opts.append) {
+            text = data + text;
+          }
 
-        editor.setText(text);
-        done();
-      }));
+          editor.setText(text);
+          unsafeDone();
+        }));
+    });
   });
 }
 
 function githubRelease() {
   chdirToRepo();
+  getConfigs((err, data) => {
+    if (err) {
+      console.error(err);
+      atom.beep();
+      return;
+    }
 
-  loophole.allowUnsafeNewFunctionAsync((done) => {
-    return conventionalGithubReleaser({
-      type: 'token'
-    }, ...getConfigs(), (err, data) => {
-      if (err) {
-        err.message = 'Error in conventional-github-releaser: ' + err.message;
-        console.error(err);
-        atom.beep();
-      }
+    let configs = data;
 
-      console.log(data);
-      done();
+    loophole.allowUnsafeNewFunctionAsync((unsafeDone) => {
+      return conventionalGithubReleaser({
+        type: 'token'
+      }, ...configs, (err, data) => {
+        if (err) {
+          err.message = 'Error in conventional-github-releaser: ' + err.message;
+          console.error(err);
+          atom.beep();
+          unsafeDone();
+        }
+
+        unsafeDone();
+      });
     });
   });
 }
@@ -82,8 +133,8 @@ function githubRelease() {
 export let config = {
   preset: {
     type: 'string',
-    description: 'A set of options of a popular project so you don\'t have to define everything in options, context, gitRawCommitsOpts, parserOpts or writerOpts manually.',
-    default: 'angular'
+    description: 'auto, angular, atom, ember, eslint, express, jquery, jscs or jshint.',
+    default: 'auto'
   },
   append: {
     type: 'boolean',
