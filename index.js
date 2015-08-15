@@ -138,7 +138,7 @@ export let config = {
   },
   append: {
     type: 'boolean',
-    description: 'Should the log be appended.',
+    description: 'Should the log be appended to existing data.',
     default: false
   },
 	releaseCount: {
