@@ -133,7 +133,7 @@ function githubRelease() {
 export let config = {
   preset: {
     type: 'string',
-    description: 'auto, angular, atom, ember, eslint, express, jquery, jscs or jshint.',
+    description: 'auto, angular, atom, ember, eslint, express, jquery, jscs jshint or codemirror.',
     default: 'auto'
   },
   append: {
