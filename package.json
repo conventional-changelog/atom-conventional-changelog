@@ -1,6 +1,6 @@
 {
   "name": "conventional-changelog",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Generate a changelog or make a new GitHub release from git metadata",
   "keywords": [
     "conventional-github-releaser",
