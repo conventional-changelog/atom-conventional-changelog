@@ -22,7 +22,7 @@ function chdirToRepo() {
 }
 
 function getConfigs(done) {
-  let preset = atom.config.get('conventional-changelog.preset');
+  let preset = atom.config.get('conventional-changelog.preset').toLowerCase();
   let append = atom.config.get('conventional-changelog.append');
   let releaseCount = atom.config.get('conventional-changelog.releaseCount');
 
