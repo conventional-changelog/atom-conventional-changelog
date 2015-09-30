@@ -1,4 +1,4 @@
-'use babel'
+'use babel';
 import concatStream from 'concat-stream';
 import conventionalChangelog from 'conventional-changelog';
 import conventionalCommitsDetector from 'conventional-commits-detector';
