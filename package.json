@@ -26,6 +26,12 @@
     "conventional-github-releaser": "^0.5.0",
     "git-raw-commits": "^0.1.2",
     "loophole": "git://github.com/stevemao/loophole.git",
-    "through2": "^2.0.0"
-  }
+    "through2": "^2.0.0",
+    "snyk": "^1.189.0"
+  },
+  "scripts": {
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
